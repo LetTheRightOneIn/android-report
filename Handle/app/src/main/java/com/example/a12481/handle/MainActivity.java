@@ -9,77 +9,68 @@ import android.widget.TextView;
 import android.view.textclassifier.TextClassification;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView mTextView,TextView1,TextView2,TextView3;
-    private Handler mHandlerTest1;
-    private Handler mHandlerTest2;
-    private int counter=0;
+
+    private TextView textView;
+
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            textView.setText("(꒪Д꒪)ノ");//第二种更新ui的方法
+        }
+    };
+
+    //第一种用handler更新UI的方法
+    private void handler1(){
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(" щ(ﾟДﾟщ) ");
+            }
+        });
+    }
+
+    //第二种用handler更新UI的方法
+    private  void handler2(){
+        handler.sendEmptyMessage(1);//此处发送消息给handler,然后handler接收消息并处理消息进而更新ui
+    }
+
+
+    //第三种用handler更新UI的方法
+    private void  handler3(){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText("っﾟДﾟ)っ");
+            }
+        });
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        init();
-    }
-    private void init() {
-        mTextView = (TextView) findViewById(R.id.textView);
-        TextView1 = (TextView) findViewById(R.id.textView2);
-        TextView2 = (TextView) findViewById(R.id.textView3);
-        TextView3 = (TextView) findViewById(R.id.textView4);
-        //1 子线程发送消息给本身
+
+        textView = (TextView) findViewById(R.id.textView);
         new Thread(){
-        public void run(){
-                Looper.prepare();
-                mHandlerTest1=new HandlerTest1(Looper.myLooper());
-                Message message = new Message();
-                message.obj = "子线程发送的消息Hi~Hi";
-                mHandlerTest1.sendMessage(message);
-                Looper.loop();
-            };
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    handler1();
+                    Thread.sleep(1000);
+                    handler2();
+                    Thread.sleep(1000);
+                    handler3();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }.start();
 
     }
 
-    private class HandlerTest1 extends Handler {
-
-        private HandlerTest1(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            System.out.println("子线程收到:" + msg.obj);
-            //2  收到消息后可再发消息到主线程
-            mHandlerTest2=new HandlerTest2(getMainLooper());
-            Message message = new Message();
-            message.obj = "O(∩_∩)O";
-            mHandlerTest2.sendMessage(message);
-            TextView3.setText("发送给主线程的内容:" + message.obj);
-            TextView2.setText("收到主线程的内容:" + msg.obj);
-        }
-    }
-
-    private class HandlerTest2 extends Handler {
-
-        private HandlerTest2(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            mTextView.setText("在主线程中,收到子线程发来消息:" + msg.obj);
-
-            //3  收到消息后再发消息到子线程
-            if (counter==0) {
-                Message message = new Message();
-                message.obj = "主线程发送的消息Xi~Xi";
-                mHandlerTest1.sendMessage(message);
-                counter++;
-                TextView1.setText("主线程发送的消息:" + message.obj);
-            }
-
-        }
-    }
-
 }
+
+
+
